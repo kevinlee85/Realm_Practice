@@ -13,7 +13,11 @@ import MapKit
 class LogViewController: UITableViewController, UISearchResultsUpdating, UISearchBarDelegate {
     
     var specimens = Realm().objects(Specimen).sorted("name", ascending: true)
-    var searchResults = Realm().objects(Specimen)
+    var searchResults = Realm().objects(Specimen) {
+        didSet {
+            self.tableView.reloadData()
+        }
+    }
     
     @IBOutlet weak var segmentedControl: UISegmentedControl!
     
@@ -23,11 +27,8 @@ class LogViewController: UITableViewController, UISearchResultsUpdating, UISearc
     // You can use objectsWhere but let's introduce predicates! :]
     
     func updateSearchResultsForSearchController(searchController: UISearchController) {
-        println("updateSearchResultsForSearchController, searchResults count is: \(searchResults.count)")
         let searchString = searchController.searchBar.text
         filterResultsWithSearchString(searchString)
-        let searchResultsController = searchController.searchResultsController as! UITableViewController
-        searchResultsController.tableView.reloadData()
     }
     
     // MARK: - View Lifecycle
@@ -35,13 +36,7 @@ class LogViewController: UITableViewController, UISearchResultsUpdating, UISearc
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        var searchResultsController = UITableViewController(style: .Plain) as UITableViewController
-        searchResultsController.tableView.delegate = self
-        searchResultsController.tableView.dataSource = self
-        searchResultsController.tableView.rowHeight = 63
-        searchResultsController.tableView.registerClass(LogCell.self, forCellReuseIdentifier: "LogCell")
-        
-        searchController = UISearchController(searchResultsController: searchResultsController)
+        searchController = UISearchController(searchResultsController: nil)
         searchController.searchResultsUpdater = self
         searchController.searchBar.sizeToFit()
         searchController.searchBar.tintColor = UIColor.whiteColor()
@@ -80,7 +75,6 @@ class LogViewController: UITableViewController, UISearchResultsUpdating, UISearc
         
         if (searchController.active) {
             specimen = searchResults[indexPath.row]
-            println("searchController.active")
         } else {
             specimen = specimens[indexPath.row]
         }
@@ -181,7 +175,6 @@ class LogViewController: UITableViewController, UISearchResultsUpdating, UISearc
         default:
             searchResults = Realm().objects(Specimen).filter(predicate)
         }
-        println("searchRestults count is: \(searchResults.count)")
     }
     
 }
